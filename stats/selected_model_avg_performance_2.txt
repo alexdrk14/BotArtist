@@ -1,0 +1,5 @@
+Best Configuration avg performances during K-Fold cross validation:
+Train ROC-AUC :0.8583880563008319 avg.
+Val ROC-AUC:0.8520224592014788 avg.
+Hold out ROC-AUC: 0.7757785026231463
+Best threshold: 0.4721712538967589 and G-Means:0.7755080221476104
