@@ -31,6 +31,8 @@ from imblearn.under_sampling import RandomUnderSampler
 from collections import defaultdict
 
 DATA_PATH = 'data/'
+STATS_PATH = 'stats/'
+FIGURES_PATH = 'plots/'
 
 class Piepeline:
     def __init__(self,NumberOfConfig, FS, Models, Models_grid_params,
@@ -63,7 +65,7 @@ class Piepeline:
         print(f'Configurations all :{Models_grid_params}')
 
         self.models = [Model(nmbr_to_select=NumberOfConfig, configs_ranges=Models_grid_params[i], model=Models[i]) for i in range(len(Models))]
-        self.features_file = "selected_features.txt"
+        self.features_file = STATS_PATH + "selected_features.txt"
 
         #self.models[0].parameters = [{'max_depth': 11, 'learning_rate': 0.01, 'subsample': 0.65, 'colsample_bytree': 0.55, 'min_child_weight': 10.0, 'gamma': 1.0, 'reg_lambda': 1.5, 'n_estimators': 1500, 'eval_metric': 'auc', 'tree_method': 'gpu_hist', 'predictor': 'gpu_predictor', 'objective': 'binary:logistic', 'use_label_encoder': False, 'scale_pos_weight': 19.968479514120073}]
 
@@ -106,7 +108,7 @@ class Piepeline:
         best_coef = sum(lasso_coef[best_alpha]) / len(lasso_coef[best_alpha])
 
 
-        f_out = open("log_lasso_alpha.txt", "w+")
+        f_out = open(STATS_PATH + "log_lasso_alpha.txt", "w+")
         f_out.write(f'Best alpha:{best_alpha}\n')
         f_out.close()
 
@@ -167,7 +169,7 @@ class Piepeline:
             """Store this configuration for particular model"""
             best_configs.append(model_best_config[0][0])
 
-            f_out = open(f'selected_model_config_{model_index + 1}.txt', "w+")
+            f_out = open(STATS_PATH + f'selected_model_config_{model_index + 1}.txt', "w+")
             f_out.write(f'{best_configs[-1]}')
             f_out.close()
 
@@ -194,7 +196,7 @@ class Piepeline:
 
             plt.plot(fpr, tpr, linestyle='--', label=f'{model_labels[model_index]} ROC-AUC: {performances[model_index][best_configs[-1]]["roc-auc-val"]:.3f}')
 
-            f_out = open(f'selected_model_avg_performance_{model_index + 1}.txt', "w+")
+            f_out = open(STATS_PATH + f'selected_model_avg_performance_{model_index + 1}.txt', "w+")
             f_out.write(f'Best Configuration avg performances during K-Fold cross validation:\n' +
                         f'Train ROC-AUC :{performances[model_index][best_configs[-1]]["roc-auc-train"]} avg.\n' +
                         f'Val ROC-AUC:{performances[model_index][best_configs[-1]]["roc-auc-val"]} avg.\n' +
@@ -205,7 +207,7 @@ class Piepeline:
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
         plt.legend()
-        plt.savefig("roc_auc_both_models.png", dpi=300)
+        plt.savefig(FIGURES_PATH + "roc_auc_both_models.png", dpi=300)
         plt.clf()
 
         """Identify model that performs better in VALIDATION dataset in average. This model will be selected as final model.
@@ -242,7 +244,7 @@ class Piepeline:
 
         fig = plt.figure()
         shap.summary_plot(shap_values, plot_type='violin', show=False)
-        fig.savefig('shap.png', bbox_inches='tight', dpi=600, facecolor='w')
+        fig.savefig(FIGURES_PATH + 'shap.png', bbox_inches='tight', dpi=600, facecolor='w')
         plt.clf()
         print(f'{datetime.now()} End of SHAP explainer')
 

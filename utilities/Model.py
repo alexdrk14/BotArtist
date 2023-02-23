@@ -11,7 +11,7 @@ import pickle, itertools
 
 from xgboost import XGBClassifier
 
-
+STATS_PATH = 'stats/'
 
 """
    Model class that store the entier model and configurational set of parameters, 
@@ -58,14 +58,15 @@ class Model:
 
     def save_model(self):
         self.store_params()
-        pickle.dump(self.model, open("XGB_v2.pkl", "wb"))
-        pickle.dump(self.scaller, open('scaller_v2.pkl', 'wb'))
-        self.model.save_model("XGB_model.json")
+        pickle.dump(self.model, open(STATS_PATH + "XGB_v2.pkl", "wb"))
+        if self.scaller is not None:
+            pickle.dump(self.scaller, open(STATS_PATH + 'scaller_v2.pkl', 'wb'))
+        self.model.save_model(STATS_PATH + "XGB_model.json")
 
     def load_model(self):
         #self.load_params()
         #self.model.load_model("XGB_model.json")
-        f_in = open("XGB_v2.pkl", "rb")
+        f_in = open(STATS_PATH + "XGB_v2.pkl", "rb")
         self.model = pickle.load(f_in)
         f_in.close()
 
