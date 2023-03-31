@@ -1,14 +1,25 @@
+""""####################################################################################################################
+Author: Alexander Shevtsov ICS-FORTH
+E-mail: shevtsov@ics.forth.gr
+-----------------------------------
+Implementation of data loading utility. It allows to load data from data path and manage to :
+    - split them into train/validation (visible) and test (hold-out) portions
+    - in case of repetitions script keeps original data split in order to keep testing set un-seen by model
+    - also stability of test set and train/validation allow to multiple executions over different algorithms
+      and keep their performances equal
+####################################################################################################################"""
+
 import pandas as pd
 import numpy as np
 from os import path
 import utilities.mongoConfig as cnf
 from sklearn.model_selection import train_test_split
-from imblearn.under_sampling import RandomUnderSampler
+
 
 
 class DataLoading:
 
-    def __init__(self, data_path, test_size=0.3, verbose=False, shuffle=True):
+    def __init__(self, data_path, test_size=0.2, verbose=False, shuffle=True):
         """Define all type of features filenames (output files from feature extraction methods)"""
 
         if not data_path.endswith('/'):
@@ -109,11 +120,6 @@ class DataLoading:
                 print('Data Loading: Loaded dataset with:' +
                       f'\n\tWith class 0:{sum(Y == 0)} and 1:{sum(Y == 1)}')
             return X, Y
-
-
-
-
-
 
 
     def main(self):

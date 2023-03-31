@@ -5,21 +5,22 @@ E-mail: shevtsov@ics.forth.gr, shevtsov@csd.uoc.gr
 Parameter fine-tuning and Feature selection for ML model.
 ####################################################################################################################"""
 
-import os, ast, shap
+import os, ast
 import numpy as np
+import pandas as pd
 
-import matplotlib.pyplot as plt
 
+from plotting import plot_roc_curves, plot_shap_figure
 from datetime import datetime
-
+"""Models that we use"""
 from xgboost import XGBClassifier
 from sklearn.ensemble import RandomForestClassifier
+
 from sklearn.pipeline import Pipeline
 from tqdm import tqdm
 
-
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
-from sklearn.metrics import roc_auc_score, roc_curve
+from sklearn.metrics import roc_auc_score, roc_curve, auc, precision_recall_curve
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import Lasso
 
@@ -32,12 +33,13 @@ from collections import defaultdict
 
 DATA_PATH = 'data/'
 STATS_PATH = 'stats/'
-FIGURES_PATH = 'plots/'
+PLOTS_PATH = 'plots/'
+
 
 class Piepeline:
-    def __init__(self,NumberOfConfig, FS, Models, Models_grid_params,
-                 fs_grid_params={'alpha': np.arange(0.00001, 0.003, 0.00001)},
-                 K=5, stratified=True, shuffle=True, verbose=True):
+    def __init__(self, NumberOfConfig, FS, Models, Models_grid_params,
+                       fs_grid_params, K=5, stratified=True,
+                       shuffle=True, verbose=True):
          
         self.verbose = verbose
 
@@ -56,18 +58,15 @@ class Piepeline:
                 if Models[model_index] == XGBClassifier:
                     Models_grid_params[model_index]['scale_pos_weight'] = [neg_count / pos_count]
                 elif Models[model_index] == RandomForestClassifier:
-                    Models_grid_params[1]['class_weight'] = [{
+                    Models_grid_params[model_index]['class_weight'] = [{
                                                             0: (self.Y_visible.shape[0] / (2 * neg_count)),
                                                             1: (self.Y_visible.shape[0] / (2*pos_count))
                                                             }]
 
         self.FS = FS
-        print(f'Configurations all :{Models_grid_params}')
-
+        
         self.models = [Model(nmbr_to_select=NumberOfConfig, configs_ranges=Models_grid_params[i], model=Models[i]) for i in range(len(Models))]
-        self.features_file = STATS_PATH + "selected_features.txt"
-
-        #self.models[0].parameters = [{'max_depth': 11, 'learning_rate': 0.01, 'subsample': 0.65, 'colsample_bytree': 0.55, 'min_child_weight': 10.0, 'gamma': 1.0, 'reg_lambda': 1.5, 'n_estimators': 1500, 'eval_metric': 'auc', 'tree_method': 'gpu_hist', 'predictor': 'gpu_predictor', 'objective': 'binary:logistic', 'use_label_encoder': False, 'scale_pos_weight': 19.968479514120073}]
+        self.features_file = f'{STATS_PATH}selected_features.txt'
 
 
         self.fs_grid_params = fs_grid_params
@@ -94,7 +93,7 @@ class Piepeline:
             kfolds = StratifiedKFold(self.K)
             search = GridSearchCV(pipeline,
                                   {'model__alpha': self.fs_grid_params['alpha']},
-                                  cv=kfolds.split(X,Y), scoring="roc_auc", verbose=3
+                                  cv=kfolds.split(X, Y), scoring="roc_auc", verbose=3
                                   )
             search.fit(X, Y)
 
@@ -108,7 +107,7 @@ class Piepeline:
         best_coef = sum(lasso_coef[best_alpha]) / len(lasso_coef[best_alpha])
 
 
-        f_out = open(STATS_PATH + "log_lasso_alpha.txt", "w+")
+        f_out = open(f'{STATS_PATH}log_lasso_alpha.txt', "w+")
         f_out.write(f'Best alpha:{best_alpha}\n')
         f_out.close()
 
@@ -122,6 +121,8 @@ class Piepeline:
 
     """Return best configuration and average performance of best performance during K-Fold Cross Validation"""
     def fine_tune_models(self):
+
+        self.data_stats = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: None))))
         performances = defaultdict(lambda: defaultdict(lambda: {"roc-auc-val": [], "roc-auc-train": []}))
             
         fold_ind = 0
@@ -131,8 +132,8 @@ class Piepeline:
             train_X, val_X = self.X_visible[self.selected_features].iloc[train_index, :], self.X_visible[self.selected_features].iloc[val_index, :]
             train_Y, val_Y = self.Y_visible.iloc[train_index, ], self.Y_visible.iloc[val_index, ]
            
-            fold_ind += 1
-            print(f'Fold index:{fold_ind} of {self.K}')
+
+            print(f'Fold index:{fold_ind+1} of {self.K}')
 
             for i, (model) in enumerate(self.models):
                 print(f'Model: {i+1}')
@@ -145,15 +146,28 @@ class Piepeline:
 
                     performances[i][f'{model_config}']["roc-auc-val"].append(roc_auc_score(val_Y, YP_val))
                     performances[i][f'{model_config}']["roc-auc-train"].append(roc_auc_score(train_Y, YP_train))
-                    #performances[f'{model_config}']["f1-val"].append(f1_score(val_Y, model.predict(val_X)))
-        return performances
 
+                    """Keep false positive rate, true positive rate for later plotting with shadowing for ROC-AUC curves"""
+                    fpr, tpr, _ = roc_curve(val_Y, YP_val)
+                    precision, recall, _ = precision_recall_curve(val_Y, YP_val)
+
+                    self.data_stats[i][fold_ind][f'{model_config}']["FP"] = fpr
+                    self.data_stats[i][fold_ind][f'{model_config}']["TP"] = tpr
+
+            fold_ind += 1
+        
+        return performances
+        
 
     """Return selected model based on best average performances during K-Fold Cross Validation"""
-    def measure_and_select(self, performances):
-        best_configs = []
+    def measure_and_select(self, performances=None):
+        
         ready_models = []
-        model_labels = ["XGBoost", "RandomForest"]
+        model_labels, model_indexes = ["XGBoost", "RandomForest"]
+        model_indexes = [i+1 for i in range(len(model_labels))]
+
+
+        train_roc_auc, val_roc_auc, holdout_roc_auc, decision_th, gmeans, best_configs = [],[],[],[],[],[]
 
 
         for model_index in range(len(self.models)):
@@ -168,15 +182,10 @@ class Piepeline:
 
             """Store this configuration for particular model"""
             best_configs.append(model_best_config[0][0])
-
-            f_out = open(STATS_PATH + f'selected_model_config_{model_index + 1}.txt', "w+")
-            f_out.write(f'{best_configs[-1]}')
-            f_out.close()
+            
 
             """Create model"""
             model = self.models[model_index]
-            print(best_configs[-1])
-            print(type(best_configs[-1]))
             model.create_model(ast.literal_eval(best_configs[-1]))
             model.fit(self.X_visible[self.selected_features], self.Y_visible)
             ready_models.append(model)
@@ -188,66 +197,74 @@ class Piepeline:
             hold_out_roc_auc = roc_auc_score(self.Y_holdOUT,
                                              model.predict(self.X_holdOUT[self.selected_features]))
 
-
             """calculate the g-mean for each threshold"""
-            gmeans = np.sqrt(tpr * (1 - fpr))
-            # locate the index of the largest g-mean
-            ix = np.argmax(gmeans)
+            g_mean = np.sqrt(tpr * (1 - fpr))
 
-            plt.plot(fpr, tpr, linestyle='--', label=f'{model_labels[model_index]} ROC-AUC: {performances[model_index][best_configs[-1]]["roc-auc-val"]:.3f}')
+            """locate the index of the larger g-mean"""
+            ix = np.argmax(g_mean)
 
-            f_out = open(STATS_PATH + f'selected_model_avg_performance_{model_index + 1}.txt', "w+")
-            f_out.write(f'Best Configuration avg performances during K-Fold cross validation:\n' +
-                        f'Train ROC-AUC :{performances[model_index][best_configs[-1]]["roc-auc-train"]} avg.\n' +
-                        f'Val ROC-AUC:{performances[model_index][best_configs[-1]]["roc-auc-val"]} avg.\n' +
-                        f'Hold out ROC-AUC: {hold_out_roc_auc}\n' +
-                        f'Best threshold: {th[ix]} and G-Means:{gmeans[ix]}\n')
-            f_out.close()
+            decision_th.append(th[ix])
+            gmeans.append(g_mean[ix])
+            
+            train_roc_auc.append(performances[model_index][best_configs[-1]]["roc-auc-train"] )
+            val_roc_auc.append(performances[model_index][best_configs[-1]]["roc-auc-val"])
+            holdout_roc_auc.append(hold_out_roc_auc)
 
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.legend()
-        plt.savefig(FIGURES_PATH + "roc_auc_both_models.png", dpi=300)
-        plt.clf()
+
+        stats_df = pd.DataFrame([model_labels, model_indexes,
+                                 train_roc_auc, val_roc_auc, holdout_roc_auc, 
+                                 decision_th, gmeans, best_configs, 
+                                 [f'{self.selected_features}' for i in model_indexes]]).T
+
+        stats_df.columns = ['name', 'model_index', 'train_rocauc',
+                            'valid_rocauc', 'holdout_rocauc', 
+                            'decision_threshold', 'gmean', 'params',
+                            'features']
+
+        stats_df.to_csv(f'{STATS_PATH}pipeline_result.csv', index=False, sep='\t')
+
 
         """Identify model that performs better in VALIDATION dataset in average. This model will be selected as final model.
-           WE DON"T UTILISE HOLD-OUT DATASET PERFORMANCE FOR FINAL MODEL SELECTION
-        """
+           WE DON"T UTILISE HOLD-OUT DATASET PERFORMANCE FOR FINAL MODEL SELECTION"""
+        for model_ind in range(len(self.models)):
+            for fold in self.data_stats[model_ind]:
+                conf = list(self.data_stats[model_ind][fold].keys())[0]
+                self.data_stats[model_ind][fold] = self.data_stats[model_ind][fold][conf]
 
-        if performances[0][best_configs[0]]["roc-auc-val"] >= performances[1][best_configs[1]]["roc-auc-val"]:
-            return ready_models[0]
-        else:
-            return ready_models[1]
 
+        plot_roc_curves(model_labels, self.data_stats, PLOTS_PATH)
+        
+        best_model_index = [(ind, performances[ind][best_configs[ind]]["roc-auc-val"]) for ind in range(len(performances))]
+        best_model_index.sort(key=lambda t:t[1], reverse=True)
+
+        return ready_models[best_model_index[0][0]]
+
+       
 
     def main(self):
         print(f'{datetime.now()} Start fine-tuning of feature selection')
+
         self.feature_selection()
+
         print(f'{datetime.now()} Done\n' +
               f'\tSelected {len(self.selected_features)} of {self.X_visible.shape[1]} features.' +
-              f'\n\t{self.selected_features}')
-
-        print(f'{datetime.now()} Start fine-tuning of Models')
+              f'\n\t{self.selected_features}\n' +
+              f'{datetime.now()} Start fine-tuning of Models')
 
         performances = self.fine_tune_models()
 
-        print(f'{datetime.now()} End of fine-tuning')
+        print(f'{datetime.now()} End of fine-tuning\n' +
+              f'{datetime.now()} Start of model selection')
 
-        print(f'{datetime.now()} Start of model selection')
         best_model = self.measure_and_select(performances)
-        print(f'{datetime.now()} End of model selection')
 
-        print(f'{datetime.now()} Start of SHAP explainer')
+        print(f'{datetime.now()} End of model selection' +
+              f'{datetime.now()} Start of SHAP explainer')
 
-        explainer = shap.TreeExplainer(best_model.model)
-        shap_values = explainer(self.X_holdOUT[self.selected_features])
+        plot_shap_figure(best_model.model, self.X_holdOUT[self.selected_features], PLOTS_PATH)
 
-        fig = plt.figure()
-        shap.summary_plot(shap_values, plot_type='violin', show=False)
-        fig.savefig(FIGURES_PATH + 'shap.png', bbox_inches='tight', dpi=600, facecolor='w')
-        plt.clf()
-        print(f'{datetime.now()} End of SHAP explainer')
-
+        print(f'{datetime.now()} End of SHAP explainer' +
+              f'{datetime.now()} Start of final model creation')
 
         """Before store the model we should train model over all data and we can store the model for further usage"""
         """Free memory"""
@@ -256,7 +273,7 @@ class Piepeline:
         del(self.Y_visible)
         del(self.X_visible)
 
-        print(f'{datetime.now()} Start of final model creation')
+
         """Load all data from csv file"""
         X, Y = DataLoading(data_path=DATA_PATH, verbose=self.verbose).load_dataset(splited=False)
 
@@ -268,9 +285,11 @@ class Piepeline:
 
 if __name__ == "__main__":
 
+    print('Starting of model creation')
+    
     """Random Select NumberOfConfig from defined range of parameters via computation of all possible combinations and 
     selecting randomly defined number of configurations for each model"""
-    NumberOfConfig = 5
+    NumberOfConfig = 50
     defined_configs = [ #XGBoost Classifier range of parameters
                         {'max_depth': [6, 7, 8, 9, 11, 13],
                         'learning_rate': [0.005, 0.01, 0.015],
@@ -288,16 +307,14 @@ if __name__ == "__main__":
 
                         #RandomForest classifier range of parameters
 
-                       {'n_jobs': [55],
-                        'max_depth': [6, 7, 8, 9, 11, 13],
-                       'max_features': ['sqrt'],
-                       'min_samples_leaf': [2, 4],
-                       'min_samples_split': [2, 5, 8],
-                       'n_estimators': [1000, 1500, 2000, 2500, 3000]}
+                       {'n_jobs': [40],
+                        'max_depth': [5, 6, 7, 8, 9, 10, 11, 12, 13],
+                        'max_features': ['sqrt'],
+                        'min_samples_leaf': [1, 2, 3, 4, 5],
+                        'min_samples_split': [2, 3, 4, 5, 6, 7, 8],
+                        'n_estimators': [1000, 1500, 2000, 2500, 3000, 3500]}
                        ]
 
-    """This Pipeline requires 120+ hours of execution time in Nvidia RTX 2080 TI. 
-        In case of re-producing the results i wish you good luck."""
     Piepeline(FS=Lasso,
               Models=[XGBClassifier, RandomForestClassifier],
               fs_grid_params={'alpha': np.arange(0.00001, 0.003, 0.00001)},

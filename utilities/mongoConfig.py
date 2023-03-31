@@ -1,11 +1,11 @@
 """MongoDB configuration with IP address, port number and name of Database"""
 MONGO = {"ip": "127.0.0.1",
          "port": 27017,
-         "db": "RussiaWar",
-         "collection": "AllUsersHistory"
+         "db": "Mongo_DB_Name",
+         "collection": "Mongo_User_Collection"
          }
 
-InputFileName = "ALL_profile_features.csv"
+InputFileName = "russo-ukrainian-war-2022.csv"
 
 
 

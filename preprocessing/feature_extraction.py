@@ -17,7 +17,7 @@ from labels_loading import load_labels
 
 
 DATA_PATH = "../data/"
-
+OUTPUT_FILE = 'profile_features.csv' # change for preferable name and change in utilities/mongoConfig.py as input for ML fine-tuning model
 
 
 class profile_features:
@@ -27,7 +27,7 @@ class profile_features:
         """MongoDB connection class"""
         self.mongo = MongoDB()
         self.category = category
-        self.output_filename = DATA_PATH + f'ALL_profile_features.csv'
+        self.output_filename = DATA_PATH + f'profile_features.csv'
 
 
     def user_object_features(self, user_id):
@@ -49,7 +49,7 @@ class profile_features:
             user_data[feature_name] = user_object[feature_name + "_count"]
             """claculate activity divided by age of account in order to find growth by registered days"""
             user_data[feature_name + "_by_age"] = user_data[feature_name] / user_data["age"] if user_data[
-                                                                                                    "age"] != 0.0 else np.inf
+                                                                                                    "age"] != 0.0 else 0
 
         """Get len of user: name, screen_name and description"""
         for feature_name in ["name", "screen_name", "description"]:
@@ -82,11 +82,11 @@ class profile_features:
                             user_data[f_categ + "_digit_len"])
                 user_data[f_categ + "_" + case + "_pcnt"] = user_data[f_categ + "_" + case + "_len"] / len(
                     feature_val) if len(
-                    feature_val) != 0 else np.inf
+                    feature_val) != 0 else 0
 
         """Followers to  friends score"""
         user_data["foll_friends"] = (user_data["followers"] / float(user_data["friends"])) if \
-            user_data["friends"] != 0 else np.inf
+            user_data["friends"] != 0 else 0
 
         """Boolean values from user object"""
         user_data["geo"] = 1 if user_object ["geo_enabled"] else 0

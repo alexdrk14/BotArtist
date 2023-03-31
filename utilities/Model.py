@@ -2,33 +2,38 @@
 Author: Alexander Shevtsov ICS-FORTH
 E-mail: shevtsov@ics.forth.gr
 -----------------------------------
-Model class script
+Dynamic Model class that can take any possible model with limitation of fit/predict functions  and allow:
+    - random select possible set of hyper-parameter configurations
+    - train/prediction/proba predictions
+    - load / store of trained model
+    - loading of fine-tuned threshold for better prediction
 ####################################################################################################################"""
-import sys, random, ast
-import numpy as np
+import random, ast, pickle, itertools
 import pandas as pd
-import pickle, itertools
-
-from xgboost import XGBClassifier
-
-STATS_PATH = 'stats/'
 
 """
-   Model class that store the entier model and configurational set of parameters, 
+   Model class that store the entire model and configurable set of parameters, 
    used in order to reduce complexity of fine-tuning method
 """
+STATS_PATH = 'stats/'
 
 
 class Model:
 
-    def __init__(self, nmbr_to_select=0, configs_ranges={}, model=None, scaller=None):
+    def __init__(self, nmbr_to_select=0, feature_category="", configs_ranges={}, model=None):
 
         self.__model_origin = model
-        self.scaller = scaller
+        self.scaller = None
+        self.feature_category = feature_category
+        self.decision_th = None
+        self.features = None
 
+        """Define number of configurations that should be selected from 
+        pre-define spaces of possible hyper-parameter configurations"""
         if nmbr_to_select > 0:
             self.create_parameters_list(nmbr_to_select, configs_ranges)
 
+    """Create list of hyper-parameters for model via random selection from pre-defined possible hyper-parameter range"""
     def create_parameters_list(self, select, dict_range):
         config_keys = list(dict_range.keys())
 
@@ -37,38 +42,39 @@ class Model:
         selected = random.sample(list(itertools.product(*conf)), select)
         self.parameters = [{config_keys[i]: sample[i] for i in range(len(config_keys))} for sample in selected]
 
-
+    """Create model based on specific parameters"""
     def create_model(self, params):
+        """Store current model configuration"""
         self.config = ast.literal_eval(params) if type(params) == str else params
+
+        """Parse parameters to original model"""
         self.model = self.__model_origin(**self.config)
 
     def load_params(self):
         """Load selected parameters from fine-tuned model for particular
-        feature category and create XGBoost model based on those parameters"""
-        params = ast.literal_eval(open("best_model_params.txt", "r").read().split("\n")[0])
-
-        if "colsample_by_tree" in params:
-            params["colsample_bytree"] = params["colsample_by_tree"]
-        self.create_model(params)
+        feature category and create original model based on those parameters"""
+        self.create_model(ast.literal_eval(open("stats/best_model_params.txt", "r").read().split("\n")[0]))
 
     def store_params(self):
         """Store selected parameters"""
-        f_out = open("best_model_params.txt", "w+")
+        f_out = open(f'{STATS_PATH}best_model_params.txt', "w+")
         f_out.write(f'{self.config}\n')
 
+    """Store model in form of pickle object for further usage"""
     def save_model(self):
         self.store_params()
-        pickle.dump(self.model, open(STATS_PATH + "XGB_v2.pkl", "wb"))
-        if self.scaller is not None:
-            pickle.dump(self.scaller, open(STATS_PATH + 'scaller_v2.pkl', 'wb'))
-        self.model.save_model(STATS_PATH + "XGB_model.json")
+        pickle.dump(self.model, open(f'{STATS_PATH}model.pkl', "wb"))
 
+
+    """Read pickle form of pre-trained model for further usage as predictor"""
     def load_model(self):
-        #self.load_params()
-        #self.model.load_model("XGB_model.json")
-        f_in = open(STATS_PATH + "XGB_v2.pkl", "rb")
-        self.model = pickle.load(f_in)
-        f_in.close()
+        df = pd.read_csv(f'{STATS_PATH}pipeline_result.csv', sep='\t')
+        best_model = df['valid_rocauc'].idxmax()
+        self.decision_th = df.iloc[best_model]['decision_threshold']
+        self.features = ast.literal_eval(df.iloc[best_model]['features'])
+
+        with open(f'{STATS_PATH}model.pkl', "rb") as f_in:
+            self.model = pickle.load(f_in)
 
     def fit(self, x, y):
         self.model.fit(x, y)
@@ -77,30 +83,22 @@ class Model:
         self.fit(x_train, y_train)
         return self.predict_proba(x_train)[:, 1], self.predict_proba(x_val)[:, 1]
 
-        #YP_train = YP_train[:, 1] if type(YP_train[0]) != np.int64 else YP_train
-        #YP_val = YP_val[:, 1] if type(YP_val[0]) != np.int64 else YP_val
-        #return YP_train, YP_val
-
+    """Prediction function that predict without decision correction in case of no proper threshold
+    In case of correction threshold (after fine-tuning) we predict with proper prediction threshold"""
     def predict(self, X):
-        return self.model.predict(X)
+        if self.features is not None:
+            X = X[self.features]
+
+        if self.decision_th is None:
+            return self.model.predict(X)
+        else:
+            Probs = self.predict_proba(X)[:, 1].copy()
+            return Probs > self.decision_th
 
     def predict_proba(self, X):
+        if self.features is not None:
+            X = X[self.features]
         return self.model.predict_proba(X)
 
-    """Data scaling function"""
-
-    """
-    def scale(self, train, test=None):
-        #At each scale keep scaller in order to store the last one
-        self.scaller = StandardScaler()
-        train_scaled = pd.DataFrame(self.scaller.fit_transform(train.copy()),
-                                    columns=train.columns.to_list())
-        if test is not None:
-            test_scaled = pd.DataFrame(self.scaller.transform(test.copy()),
-                                       columns=test.columns.to_list())
-            return train_scaled, test_scaled
-        else:
-            return train_scaled
-    """
 
 
