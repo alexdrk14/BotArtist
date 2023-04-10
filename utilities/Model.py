@@ -93,7 +93,7 @@ class Model:
             return self.model.predict(X)
         else:
             Probs = self.predict_proba(X)[:, 1].copy()
-            return Probs > self.decision_th
+            return Probs >= self.decision_th
 
     def predict_proba(self, X):
         if self.features is not None:

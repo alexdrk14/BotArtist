@@ -65,7 +65,8 @@ class Piepeline:
 
         self.FS = FS
         
-        self.models = [Model(nmbr_to_select=NumberOfConfig, configs_ranges=Models_grid_params[i], model=Models[i]) for i in range(len(Models))]
+        #self.models = [Model(nmbr_to_select=NumberOfConfig, configs_ranges=Models_grid_params[i], model=Models[i]) for i in range(len(Models))]
+         
         self.features_file = f'{STATS_PATH}selected_features.txt'
 
 
@@ -163,7 +164,7 @@ class Piepeline:
     def measure_and_select(self, performances=None):
         
         ready_models = []
-        model_labels, model_indexes = ["XGBoost", "RandomForest"]
+        model_labels = ["XGBoost", "RandomForest"]
         model_indexes = [i+1 for i in range(len(model_labels))]
 
 
@@ -251,12 +252,16 @@ class Piepeline:
               f'\n\t{self.selected_features}\n' +
               f'{datetime.now()} Start fine-tuning of Models')
 
-        performances = self.fine_tune_models()
+        #performances = self.fine_tune_models()
 
         print(f'{datetime.now()} End of fine-tuning\n' +
               f'{datetime.now()} Start of model selection')
 
-        best_model = self.measure_and_select(performances)
+        #best_model = self.measure_and_select(performances)
+        """Create model"""
+        best_model = self.models[0]
+        best_model.create_model(self.models[0].parameters[0])
+        best_model.fit(self.X_visible[self.selected_features], self.Y_visible)
 
         print(f'{datetime.now()} End of model selection' +
               f'{datetime.now()} Start of SHAP explainer')
@@ -289,7 +294,7 @@ if __name__ == "__main__":
     
     """Random Select NumberOfConfig from defined range of parameters via computation of all possible combinations and 
     selecting randomly defined number of configurations for each model"""
-    NumberOfConfig = 50
+    NumberOfConfig = 100
     defined_configs = [ #XGBoost Classifier range of parameters
                         {'max_depth': [6, 7, 8, 9, 11, 13],
                         'learning_rate': [0.005, 0.01, 0.015],

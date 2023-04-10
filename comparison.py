@@ -1,8 +1,9 @@
+#!/usr/bin/env python3.8
 """"####################################################################################################################
 Author: Alexander Shevtsov ICS-FORTH
 E-mail: shevtsov@ics.forth.gr, shevtsov@csd.uoc.gr
 -----------------------------------
-Parameter fine-tuning and Feature selection for ML model.
+This script compare performance over the kaiser datasets and the two collected and labeled conspiracy-22 and energy-crisis-22
 ####################################################################################################################"""
 
 
@@ -17,6 +18,18 @@ from sklearn.metrics import confusion_matrix
 from collections import Counter
 
 DATA_PATH = 'data/'
+
+def create_output(model_name, real_target, model_target, model_probs):
+
+    tn, fp, fn, tp = confusion_matrix(real_target, model_target).ravel()
+    model_roc_auc = roc_auc_score(real_target, model_probs) 
+    
+    output = (f'{model_name}\t{tp}\t{tn}\t{fp}\t{fn}\t' + 
+             f'{(tp / (tp + fn)):.3f}\t{(tp / (tp + fp)):.3f}' +
+             f'\t{(model_roc_auc):.3f}' )
+
+    return output, model_roc_auc
+
 
 class Measure:
     def __init__(self, verbose=True):
@@ -41,23 +54,23 @@ class Measure:
 
         volume = Counter(Twitter_Target)
         print(f'\t\tNormal VS {Title} ({volume[0]} vs {volume[1]})')
+        print('\t'.join(["Model\t", "TP", "TN", "FP", "FN", "Recall", "Prec.", "ROC-AUC"]))
+        performances = []
+        for model_name, model_target, model_probs in zip(["Botometer", "BotArtist"], [Botometer_Target, BotArtist_Target], [Botometer_Probs, BotArtist_Probs]):
 
-        tn, fp, fn, tp = confusion_matrix(Twitter_Target, Botometer_Target).ravel()
-        print(f'Botometer: TP:{tp} TN:{tn} FP:{fp} FN:{fn}' +
-              f' Rec: {(tp / (tp + fn)):.3f} Prec: {(tp / (tp + fp)):.3f}' +
-              f' ROC-AUC: {(roc_auc_score(Twitter_Target, Botometer_Probs)):.3f}')
+            output, model_roc_auc = create_output(model_name, Twitter_Target, model_target, model_probs)
+            print(output)
+            """In order to compute differences between model we multiply botometer performance by -1 and return the sumation of the list.
+               This will provide the folowing computation BotArtist + (- Botometer) => BotArtist - Botometer"""
+            performances.append(model_roc_auc if model_name == "BotArtist" else (model_roc_auc * -1) )
 
-        tn, fp, fn, tp = confusion_matrix(Twitter_Target, BotArtist_Target).ravel()
-        print(f'BotArtist: TP:{tp} TN:{tn} FP:{fp} FN:{fn}' +
-              f' Rec: {(tp / (tp + fn)):.3f} Prec: {(tp / (tp + fp)):.3f}' +
-              f' ROC-AUC: {(roc_auc_score(Twitter_Target, BotArtist_Probs)):.3f}')
         print(f'{"-" * 100}\n')
+        return sum(performances)
 
  
     """Return selected model based on best average performances during K-Fold Cross Validation"""
-    def measure_public(self, datafile):
-
-        print(f'{"-"*10}\n' + f'Measure data from file: {datafile}')
+    def measure_with_manual(self, datafile):
+        print(f'{"-"*50}\n' + f'Measure data from file: {datafile}\n' + f'{"-"*50}')
         
         """Read dataset with extracted features"""
         DATA = pd.read_csv(DATA_PATH + datafile, sep='\t')
@@ -66,37 +79,26 @@ class Measure:
         DATA.replace([np.inf, -np.inf], 0, inplace=True)
         
            
-        X = DATA[DATA['target'].isin([0, 1])].copy()
-      
-        Y_label = [0 if item == 0 else 1 for item in X['target'].values.tolist()]
-        volume = Counter(Y_label)
-        print(f'\tNormal VS Bots ({volume[0]} vs {volume[1]})')
-           
-
-        """Keep only required features"""
-        X.drop([ft for ft in X.columns.tolist() if ft not in self.features], axis=1,inplace=True)
-        Y_probs = self.model.predict_proba(X)[:, 1].copy()
-        Y_pred  = Y_probs > self.decision
-            
-        tn, fp, fn, tp = confusion_matrix(Y_label, Y_pred).ravel()
-        print(f'Our model: TP:{tp} TN:{tn} FP:{fp} FN:{fn}'+
-        f' Rec: {(tp/(tp+fn)):.3f} Pre: {(tp/(tp+fp)):.3f}' +
-        f' ROC-AUC: {(roc_auc_score(Y_label, Y_probs)):.3f}')
-        print('-'*10 + "\n")
-        #Y_compliance = pd.read_csv(DATA_PATH + datafile.replace("DATA", "COMP"), sep='\t')['target'].values.tolist()
+        real_target = DATA['twitter_target'].copy()
+        manual_target = DATA['target'].copy()
+        botometer_target = DATA['botometer_target'].copy()
         
-        #print("With compliance label correction:")
-        #tn, fp, fn, tp = confusion_matrix(Y_compliance, Y_pred).ravel()
-        #print(f'Our model: TP:{tp} TN:{tn} FP:{fp} FN:{fn}')
-        #print(f'\t Recall: {tp/(tp+fn)} Precision: {tp/(tp+fp)}')
-        #print(f'\t ROC-AUC: {roc_auc_score(Y_compliance, Y_probs)}')
-        #print('-'*10 + "\n")
+        
+        botArtist_target = self.model.predict(DATA)
+        print('\t'.join(["Model\t", "TP", "TN", "FP", "FN"]))
+        for model_name, model_target in zip(["Manual   ", "Botometer", "BotArtist"], [manual_target, botometer_target, botArtist_target]):
+            tn, fp, fn, tp = confusion_matrix(real_target, model_target).ravel()
+            #model_roc_auc = roc_auc_score(real_target, model_probs)
+ 
+            print(f'{model_name}\t{tp}\t{tn}\t{fp}\t{fn}')
+        print(f'{"-" * 50}\n')
+ 
    
                 
                
 
     """Return selected model based on best average performances during K-Fold Cross Validation"""
-    def measure(self, datafile):
+    def measure_only_tools(self, datafile):
 
         print(f'{"-"*50}\n' + f'Measure data from file: {datafile}\n' + f'{"-"*50}')
         
@@ -105,50 +107,75 @@ class Measure:
         
         DATA = DATA.fillna(0)
         DATA.replace([np.inf, -np.inf], 0, inplace=True)
-
+        
+        roc_auc_diff = []
+        
         for i, Title in zip([1, 2, 3, 4], ["suspended", "deactivated", "deleted", "all"]):
             if i == 4:
-                self.compare(DATA, Title)
+                roc_auc_diff.append(self.compare(DATA, Title))
             else:
-                self.compare(DATA[DATA['target'].isin([0, i])].copy(), Title)
+                roc_auc_diff.append(self.compare(DATA[DATA['target'].isin([0, i])].copy(), Title))
+
+        print(f'BotArtist better than  Botometer min:{min(roc_auc_diff)} and max:{max(roc_auc_diff)} avg: {sum(roc_auc_diff)/len(roc_auc_diff)} ROC-AUC\n\n')
 
 
-        #X = DATA
+    """Return selected model based on best average performances during K-Fold Cross Validation"""
+    def measure_simple(self, datafile):
+
+        print(f'{"-"*50}\n' + f'Measure data from file: {datafile}\n' + f'{"-"*50}')
+        print('\t'.join(["Model\t", "TP", "TN", "FP", "FN", "Recall", "Prec.", "ROC-AUC"]))  
+        """Read dataset with extracted features"""
+        DATA= pd.read_csv(DATA_PATH + datafile, sep='\t')
     
-        #YB = [ 0 if score < 0.5 else 1 for score in X['botometer_score']]
-        #YB_probs = X['botometer_score'].copy()
-    
-        #Y_twitter = [0 if item == 0 else 1 for item in X['target'].values.tolist()]
-        #print(f'\t\tNormal VS ALL')
+        DATA = DATA.fillna(0)
+        DATA.replace([np.inf, -np.inf], 0, inplace=True)
+
+        target = DATA['target'].copy().values.tolist()
+
+        BotArtist_Probs = self.model.predict_proba(DATA)[:, 1]
+        BotArtist_Target = self.model.predict(DATA)
+        if len(set(target)) == 1:
             
-        #tn, fp, fn, tp = confusion_matrix(Y_twitter, YB).ravel()
-        #print(f'Botometer: TP:{tp} TN:{tn} FP:{fp} FN:{fn}'+
-        #    f' Rec: {(tp/(tp+fn)):.3f} Prec: {(tp/(tp+fp)):.3f}'+
-        #    f' ROC-AUC: {(roc_auc_score(Y_twitter, YB_probs)):.3f}')
-        ##print(f'{"-"*100}')
-
-        #"""Keep only required features"""
-        ##X.drop([ft for ft in X.columns.tolist() if ft not in self.features], axis=1,inplace=True)
-        #Y_probs  = self.model.predict_proba(X)[:, 1].copy()
-        ##Y_pred = Y_probs > self.decision
-        #Y_pred = self.model.predict(X)
-    
-        #tn, fp, fn, tp = confusion_matrix(Y_twitter, Y_pred).ravel()
-        #print(f'Our model: TP:{tp} TN:{tn} FP:{fp} FN:{fn}' +
-        #f' Rec: {(tp/(tp+fn)):.3f} Prec: {(tp/(tp+fp)):.3f}' +
-        #f' ROC-AUC: {(roc_auc_score(Y_twitter, Y_probs)):.3f}')
-        #print(f'{"-"*100}\n')
- 
-            
+            add_val = list(set([0,1]) - set(target))[0]
+        else:
+            add_val = None
+        twitter_target = [0 if item == 0 else 1 for item in DATA['twitter_target'].values.tolist()]   
         
+        tn, fp, fn, tp = confusion_matrix(target, BotArtist_Target).ravel()
+        if add_val is None:
+            model_roc_auc = roc_auc_score(target, BotArtist_Probs)
+        else:
+            #print(add_val)
+            #print(target + [add_val])
+            #print(BotArtist_Probs.tolist() + [0.0 if add_val ==0 else 1.0])
+            model_roc_auc = roc_auc_score(target+ [add_val], BotArtist_Probs.tolist() + [0.0 if add_val ==0 else 1.0])
+        print(f'Botartist_O\t{tp}\t{tn}\t{fp}\t{fn}\t' +
+             f'{(tp / (tp + fn)):.3f}\t{(tp / (tp + fp)):.3f}' +
+             f'\t{(model_roc_auc):.3f}' )
+
+        tn, fp, fn, tp = confusion_matrix(twitter_target, BotArtist_Target).ravel()
+        model_roc_auc = roc_auc_score(twitter_target, BotArtist_Probs)
+
+        print(f'Botartist_T\t{tp}\t{tn}\t{fp}\t{fn}\t' +
+             f'{(tp / (tp + fn)):.3f}\t{(tp / (tp + fp)):.3f}' +
+             f'\t{(model_roc_auc):.3f}' )
+
+        #print(f'BotArtist better than  Botometer min:{min(roc_auc_diff)} and max:{max(roc_auc_diff)} avg: {sum(roc_auc_diff)/len(roc_auc_diff)} ROC-AUC\n\n')
+
+       
 
 if __name__ == "__main__":
     model = Measure()
-    for datafile in ['conspiracy_22.csv', 'energy_crisis_22.csv']:
-        model.measure(datafile)
 
-    """public data """
-    #public_data =  ["gilani-2017_DATA.csv", "cresci-17_DATA.csv","icwsm_DATA.csv", "botometer-feedback-2019_DATA.csv"]
-    #for datafile in public_data:
-    #    model.measure_public(datafile)
+    """Comparison between models on real case datasets"""
+    for datafile in ['energy_crisis_22.csv', 'conspiracy_22.csv']:
+        model.measure_only_tools(datafile)
+
+    """Comparsion on 3 kaiser manually labeled datasets"""
+    for datafile in ["varol-kaiser.csv", "germany-kaiser.csv", "us_and_newbot-kaiser.csv"]:
+        model.measure_with_manual(datafile)
+    
+
+    #for filename in ["gilani-2017_DATA.csv","botwiki-2019_DATA.csv", "midterm-2018_DATA.csv", "botometer-feedback-2019_DATA.csv", "cresci-rtbust-2019_DATA.csv", "cresci-17_DATA.csv", "varol-2017_DATA.csv"]:
+    #    model.measure_simple(filename)
     
