@@ -65,7 +65,7 @@ class Piepeline:
 
         self.FS = FS
         
-        #self.models = [Model(nmbr_to_select=NumberOfConfig, configs_ranges=Models_grid_params[i], model=Models[i]) for i in range(len(Models))]
+        self.models = [Model(nmbr_to_select=NumberOfConfig, configs_ranges=Models_grid_params[i], model=Models[i]) for i in range(len(Models))]
          
         self.features_file = f'{STATS_PATH}selected_features.txt'
 
