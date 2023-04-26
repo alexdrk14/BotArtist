@@ -17,6 +17,7 @@ detection in social science research](https://journals.plos.org/plosone/article?
 
 Beside that we also manage to collect two separate dataset of Twitter user discussions of energy-crisis and conspiracy. For these datasets we also provide 2 types of labels: 1st is labeled according to [Twitter API compliance](https://developer.twitter.com/en/docs/twitter-api/compliance) and 2nd with use of the [Botometer](https://botometer.osome.iu.edu/).  
 
+As part of our model creation we manage to perform model explainability with use of the SHAP method:
 ![plot](./plots/shap.png)
 
 
