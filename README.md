@@ -1,12 +1,13 @@
 # BotArtist: Twitter bot detection Machine Learning model based on Twitter suspension (2023).
 
 Current github repo provides implementation described in paper: "BotArtist: Twitter bot detection Machine Learning model based on Twitter suspension" ....... 
-
+## Requirements
 Installation of required packages:
 ```bash
 pip3 install -r requirements.txt
 ```
 
+## Datasets
 Developed Bot Detection ML framework was trained and tested over [2022 Russo-Ukrainian War Twitter dataset](https://github.com/alexdrk14/RussoUkrainianWar_Dataset). More detailed analysis of the dataset and user sentiment is provided on [ParasecurityGroup webpage](https://alexdrk14.github.io/RussiaUkraineWar/).
 We manage to extract profile feature characteristics for the collected users, that was used for model creation. This dataset due to the large size is shared separetly [TODO Link]().
 
@@ -17,6 +18,7 @@ detection in social science research](https://journals.plos.org/plosone/article?
 
 Beside that we also manage to collect two separate dataset of Twitter user discussions of energy-crisis and conspiracy. For these datasets we also provide 2 types of labels: 1st is labeled according to [Twitter API compliance](https://developer.twitter.com/en/docs/twitter-api/compliance) and 2nd with use of the [Botometer](https://botometer.osome.iu.edu/).  
 
+## Model Explainability
 As part of our model creation we manage to perform model explainability with use of the SHAP method:
 ![plot](./plots/shap.png)
 
