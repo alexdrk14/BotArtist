@@ -67,10 +67,8 @@ class profile_features:
         self.with_labels = with_labels
 
 
-    def user_object_features(self, user_id):
-        """Get user history item from collection"""
-
-        user_object = self.mongo.getUserProfile(user_id)
+    def user_object_features(self, user_id, user_object):
+        
         v1_object = True
         if user_object is None:
             print(f'User {user_id}: object  is None')
@@ -80,7 +78,7 @@ class profile_features:
             v1_object = False
             user_object['screen_name'] = user_object['username']
 
-        if not v1_object and type(user_object['entities']) == str:
+        if not v1_object and 'entities' in user_object and type(user_object['entities']) == str:
             user_object['entities'] = ast.literal_eval(user_object['entities'])
         user_data = dict()
 
@@ -143,7 +141,7 @@ class profile_features:
 
         for f_categ in ["name", "screen_name", "description"]:
             feature_val = user_object[f_categ] if user_object [f_categ] != None else ""
-            for case in ["upper", "lower", "digit", "special"]:
+            for case in ["upper", "lower", "digit", "spec"]:
                 if case == "upper":
                     user_data[f_categ + "_" + case + "_len"] = sum([i.isupper() for i in feature_val])
                 elif case == "lower":
@@ -164,14 +162,14 @@ class profile_features:
             user_data[f'{category}_entropy'] = get_entropy(user_object[category])
 
         """Boolean value if the profile has any characters in location section"""
-        user_data["has_location"] = 0 if len(user_object['location'].strip()) == 0 else 1
+        user_data["has_location"] = 0 if 'location' not in user_object or user_object['location'] is None or len(user_object['location'].strip()) == 0 else 1
 
         """Followers to  friends score"""
-        user_data["foll_friends"] = (user_data["followers"] / float(user_data["friends"])) if \
-            user_data["friends"] != 0 else 0
+        user_data["foll_friends"] = (user_data["followers"] / float(user_data["following"])) if \
+            user_data["following"] != 0 else 0
 
         """Found if profile has url link"""
-        user_data["profile_url"] = 1 if len(re.findall(r'(https?://\S+)', user_object['url'])) > 0 else 0
+        user_data["profile_url"] = 1 if 'url' in user_object and user_object['url'] is not None and len(re.findall(r'(https?://\S+)', user_object['url'])) > 0 else 0
 
         """Found total number of unique urls in the entyre profile object"""
         user_data["total_urls"] = len(set(description_urls).union(set(re.findall(r'(https?://\S+)', user_object['url'])))) if \
@@ -203,7 +201,8 @@ class profile_features:
                     "name_entropy", "has_location",
                     "profile_url", "total_urls", "foll_friends",
                     'verified', 'protected', 'target', "user_id"]
-
+        if not self.with_labels:
+            _ = self.feature_names.pop(-2)
         self.f_out = open(self.output_filename, "w+")
         self.f_out.write("\t".join(self.feature_names) + "\n")
 
@@ -234,12 +233,13 @@ class profile_features:
             """Load user labels (alive , suspended, removed and protected) and create progress bar object"""
             self.labels = load_labels(DATA_PATH)
             for user_id in sequence:
-                user_data = self.user_object_features(int(user_id))
+                user_object = self.mongo.getUserProfile(int(user_id))
+                user_data = self.user_object_features(int(user_id), int(user_object))
 
                 if user_data is not None:
                     self.dump_user_vector(user_data)
         else:
-            client, db = self.mongo.connect()
+            client, db = self.mongo.connect(getCursor=True)
             for item in tqdm(db['usersHistory'].find({}, no_cursor_timeout=True)):
                 user_id = int(item['user_id'])
                 max_date = parse('2000-01-01')
@@ -269,5 +269,5 @@ parser.add_argument('--without_labels', dest="nolabels", action="store_true", he
 
 if __name__ == "__main__":
     args = vars(parser.parse_args())
-    item = profile_features(verbose=args.verbose, with_labels=(not args.nolabels))
+    item = profile_features(verbose=args["verbose"], with_labels=(not args["nolabels"]))
     item.start_extraction()
