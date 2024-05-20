@@ -3,7 +3,7 @@
   "name": "Russo-Ukrainian War (2022) twitter 10M profiles",
   "description": "Description of the 2022 Russo-Ukrainian War discussion dataset, containing more than 10M anonymized user profiles.",
   "license": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
-  "url": "https://.......",
+  "url": "https://zenodo.org/records/11203900",
   "distribution": [
     {
       "@type": "cr:FileObject",
