@@ -1,0 +1,1 @@
+['age', 'screen_name_sim', 'followers', 'listed_by_age', 'profile_image', 'description_upper_len', 'description_lower_len', 'description_lower_pcnt', 'description_digit_pcnt', 'description_spec_pcnt', 'screen_name_spec_len', 'screen_name_digit_pcnt', 'screen_name_len', 'name_spec_len', 'name_len', 'has_location', 'verified']

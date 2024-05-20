@@ -1,6 +1,6 @@
 """"####################################################################################################################
-Author: Alexander Shevtsov ICS-FORTH
-E-mail: shevtsov@ics.forth.gr
+Author: TBD
+E-mail: TBD
 -----------------------------------
 Feature extraction based on user profile history timeline. Store collected features in csv file.
 ####################################################################################################################"""

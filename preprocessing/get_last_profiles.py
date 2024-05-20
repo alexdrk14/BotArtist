@@ -1,6 +1,6 @@
 """"####################################################################################################################
-Author: Alexander Shevtsov ICS-FORTH
-E-mail: shevtsov@ics.forth.gr
+Author: TBD
+E-mail: TBD
 -----------------------------------
 Script parse the Tweets mongoDB collection and create new userHistory collection that contain
 user object by day of object sampling (user activity like tweet, retweet and quote)

@@ -1,0 +1,1 @@
+{'max_depth': 9, 'learning_rate': 0.005, 'subsample': 0.7, 'colsample_bytree': 0.75, 'min_child_weight': 1.0, 'gamma': 1.0, 'reg_lambda': 0.7, 'n_estimators': 2000, 'eval_metric': 'auc', 'tree_method': 'gpu_hist', 'predictor': 'gpu_predictor', 'objective': 'binary:logistic', 'num_parallel_tree': 10, 'use_label_encoder': False, 'scale_pos_weight': 0.9778481012658228}

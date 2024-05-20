@@ -1,0 +1,637 @@
+{
+  "@type": "sc:Dataset",
+  "name": "Russo-Ukrainian War (2022) twitter 10M profiles",
+  "description": "Description of the 2022 Russo-Ukrainian War discussion dataset, containing more than 10M anonymized user profiles.",
+  "license": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "url": "https://.......",
+  "distribution": [
+    {
+      "@type": "cr:FileObject",
+      "@id": "russo-ukrainian-war-10M-profiles.csv",
+      "name": "russo-ukrainian-war-10M-profiles.csv",
+      "contentUrl": "data/russo-ukrainian-war-10M-profiles.csv",
+      "encodingFormat": "text/csv",
+      "sha256": "2e8e2893fdfedf19087c6681669bda992c7d132c4c1067fbe31976bcf0443d9e"
+    }
+  ],
+  "recordSet": [
+    {
+      "@type": "cr:RecordSet",
+      "name": "Russo-Ukrainian War (2022) twitter 10M profiles",
+      "description": "Feature set extracted from 10M Twitter profiles, corelated with the public discussion of 2022 Russo-Ukrainian war.",
+      "field": [
+        {
+          "@type": "cr:Field",
+          "name": "age",
+          "description": "Age of the account. Computed in days differences between creation date and the collection date.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "age"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "description_urls",
+          "description": "Number of URLs links found in the user pforile description.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "description_urls"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "description_mentions",
+          "description": "Number of user mentions found in the user pforile description.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "description_mentions"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "description_hashtags",
+          "description": "Number of hashtags found in the user pforile description.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "description_hashtags"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "screen_name_sim",
+          "description": "Jaccard similarity score computed between screen_name and username.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "screen_name_sim"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "statuses",
+          "description": "Number of tweet post made by user.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "statuses"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "statuses_by_age",
+          "description": "Number of tweet post made by user divided by age of account.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "statuses_by_age"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "following",
+          "description": "Number of the user this particular profile is following.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "following"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "following_by_age",
+          "description": "Number of the user this particular profile is following divided by the age of the account.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "following_by_age"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "followers",
+          "description": "Number of the user profile followers.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "followers"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "followers_by_age",
+          "description": "Number of the user profile followers divided by user profile age.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "followers_by_age"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "listed",
+          "description": "Raw number of twitter lists where particular user is registered.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "listed"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "listed_by_age",
+          "description": "Number of twitter lists where particular user is registered divided by profile age.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "listed_by_age"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "profile_image",
+          "description": "Boolean value, showing if user utilize default profile image.",
+          "dataType": "sc:Boolean",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "profile_image"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "description_upper_len",
+          "description": "Number of the upper case characters in the profile description.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "description_upper_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "description_lower_len",
+          "description": "Number of the lower case characters in the profile description.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "description_lower_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "description_digit_len",
+          "description": "Number of the digit characters in the profile description.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "description_digit_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "description_spec_len",
+          "description": "Number of the special characters in the profile description.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "description_spec_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "description_upper_pcnt",
+          "description": "Percentage of the upper case character in the user description.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "description_upper_pcnt"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "description_lower_pcnt",
+          "description": "Percentage of the lower case characters in the user description.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "description_lower_pcnt"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "description_digit_pcnt",
+          "description": "Percentage of the digit characters in the user description.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "description_digit_pcnt"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "description_spec_pcnt",
+          "description": "Percentage of the special characters in the user description.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "description_spec_pcnt"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "description_len",
+          "description": "The total length of the user description.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "description_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "screen_name_upper_len",
+          "description": "Number of upper case characters in the user screen_name.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "screen_name_upper_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "screen_name_lower_len",
+          "description": "Number of lower case characters in the user screen_name.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "screen_name_lower_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "screen_name_digit_len",
+          "description": "Number of digit characters in the user screen_name.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "screen_name_digit_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "screen_name_spec_len",
+          "description": "Number of special characters in the user screen_name.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "screen_name_spec_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "screen_name_upper_pcnt",
+          "description": "Percentage of upper case characters in the user screen_name.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "screen_name_upper_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "screen_name_lower_pcnt",
+          "description": "Percentage of lower case characters in the user screen_name.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "screen_name_lower_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "screen_name_digit_pcnt",
+          "description": "Percentage of digit characters in the user screen_name.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "screen_name_digit_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "screen_name_spec_pcnt",
+          "description": "Percentage of special characters in the user screen_name.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "screen_name_spec_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "screen_name_len",
+          "description": "Length of the user screen_name.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "screen_name_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "name_upper_len",
+          "description": "Number of upper case characters in the profile username.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "name_upper_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "name_lower_len",
+          "description": "Number of lower case characters in the profile username.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "name_lower_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "name_digit_len",
+          "description": "Number of digit characters in the profile username.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "name_digit_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "name_spec_len",
+          "description": "Number of special characters in the profile username.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "name_spec_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "name_upper_pcnt",
+          "description": "Percentage of upper case characters in the profile username.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "name_upper_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "name_lower_pcnt",
+          "description": "Percentage of lower case characters in the profile username.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "name_lower_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "name_digit_pcnt",
+          "description": "Percentage of digit characters in the profile username.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "name_digit_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "name_spec_pcnt",
+          "description": "Percentage of special characters in the profile username.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "name_spec_len"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "screen_name_entropy",
+          "description": "Entropy of the profile screen_name.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "screen_name_entropy"
+            }
+          }
+        },{
+          "@type": "cr:Field",
+          "name": "name_entropy",
+          "description": "Entropy of the profile username.",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "name_entropy"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "has_location",
+          "description": "Boolean value, representing if the user provide any information in the the location field.",
+          "dataType": "sc:Boolean",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "has_location"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "profile_url",
+          "description": "Boolean value, representing the existance of the URL link field in the user profile.",
+          "dataType": "sc:Boolean",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "profile_url"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "total_urls",
+          "description": "Number of unique URL links found in any textuall information provided in the user profile object.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "total_urls"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "foll_friends",
+          "description": "Ration between user followers and friends (also known as following).",
+          "dataType": "sc:Float",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "foll_friends"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "verified",
+          "description": "Boolean value, representing if the account is verified or not.",
+          "dataType": "sc:Boolean",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "verified"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "protected",
+          "description": "Boolean value, representing if the account is protected or not.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "protected"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "uid",
+          "description": "Anonymized user id",
+          "dataType": "sc:Text",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "uid"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "label",
+          "description": "The label of the account. Value contain human: for human labeled profiles and bot: for bot detected accounts.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "label"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "name": "proba",
+          "description": "Probability provided by the model over the label decision.",
+          "dataType": "sc:Integer",
+          "references": {
+            "fileObject": { "@id": "russo-ukrainian-war-10M-profiles.csv" },
+            "extract": {
+              "column": "proba"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
